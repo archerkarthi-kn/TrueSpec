@@ -51,8 +51,26 @@ class TrueSpecApp(ctk.CTk):
 
         self._setup_ui()
 
+        # Bind mousewheel globally across all child widgets so scrolling is 100% fluid anywhere
+        self.bind_all("<MouseWheel>", self._on_global_mousewheel, add="+")
+
         # Start initial background scan after UI draws
         self.after(300, self.start_background_scan)
+
+    def _on_global_mousewheel(self, event):
+        """Enables smooth, lag-free scrolling across all child widgets & cards."""
+        if hasattr(self, "scroll_frame") and hasattr(self.scroll_frame, "_parent_canvas"):
+            try:
+                if self.scroll_frame.winfo_exists():
+                    delta = event.delta
+                    if delta != 0:
+                        # Smooth, responsive 2-unit scroll per notch (works on both mouse & precision touchpad)
+                        units = int(-1 * (delta / 40))
+                        if units == 0:
+                            units = -1 if delta > 0 else 1
+                        self.scroll_frame._parent_canvas.yview_scroll(units, "units")
+            except Exception:
+                pass
 
     def _setup_ui(self):
         # Configure root layout
@@ -528,29 +546,29 @@ class TrueSpecApp(ctk.CTk):
         self._clear_frame(self.card_storage.content)
         drives = storage.get("drives", [])
         if drives:
-            for d in drives:
-                d_box = ctk.CTkFrame(self.card_storage.content, fg_color="#0F172A", corner_radius=8)
-                d_box.pack(fill="x", pady=3)
-                d_box.grid_columnconfigure(0, weight=1)
+            d_box = ctk.CTkFrame(self.card_storage.content, fg_color="#0F172A", corner_radius=8)
+            d_box.pack(fill="x", pady=2)
+            d_box.grid_columnconfigure(0, weight=1)
 
+            for idx, d in enumerate(drives):
                 is_ok = d.get("is_smart_ok", True)
                 status_color = "#10B981" if is_ok else "#EF4444"
 
                 lbl_name = ctk.CTkLabel(
                     d_box,
-                    text=f"{d.get('model', 'Drive')} ({d.get('size_gb', 0)} GB)",
+                    text=f"• {d.get('model', 'Drive')} ({d.get('size_gb', 0)} GB)",
                     font=ctk.CTkFont(size=12, weight="bold"),
                     text_color="#F8FAFC"
                 )
-                lbl_name.grid(row=0, column=0, sticky="w", padx=10, pady=(6, 2))
+                lbl_name.grid(row=idx * 2, column=0, sticky="w", padx=12, pady=(6 if idx == 0 else 4, 1))
 
                 lbl_sub = ctk.CTkLabel(
                     d_box,
-                    text=f"Type: {d.get('media_type', 'Storage')} | Bus: {d.get('interface', 'SATA/PCIe')} | S.M.A.R.T.: {d.get('smart_status', 'OK')}",
+                    text=f"   Type: {d.get('media_type', 'Storage')} | Bus: {d.get('interface', 'SATA/PCIe')} | S.M.A.R.T.: {d.get('smart_status', 'OK')}",
                     font=ctk.CTkFont(size=11),
                     text_color=status_color
                 )
-                lbl_sub.grid(row=1, column=0, sticky="w", padx=10, pady=(0, 6))
+                lbl_sub.grid(row=idx * 2 + 1, column=0, sticky="w", padx=12, pady=(0, 6 if idx == len(drives) - 1 else 2))
         else:
             lbl = ctk.CTkLabel(self.card_storage.content, text="No physical drives detected", text_color="#94A3B8")
             lbl.pack(pady=10)
@@ -561,34 +579,34 @@ class TrueSpecApp(ctk.CTk):
         self._clear_frame(self.card_gpu.content)
         adapters = gpu.get("adapters", [])
         if adapters:
-            for a in adapters:
-                g_box = ctk.CTkFrame(self.card_gpu.content, fg_color="#0F172A", corner_radius=8)
-                g_box.pack(fill="x", pady=3)
-                g_box.grid_columnconfigure(0, weight=1)
+            g_box = ctk.CTkFrame(self.card_gpu.content, fg_color="#0F172A", corner_radius=8)
+            g_box.pack(fill="x", pady=2)
+            g_box.grid_columnconfigure(0, weight=1)
 
+            for idx, a in enumerate(adapters):
                 is_ded = a.get("is_dedicated", False)
                 type_badge = "Dedicated GPU" if is_ded else "Integrated Graphics"
                 badge_color = "#38BDF8" if is_ded else "#94A3B8"
 
                 lbl_gname = ctk.CTkLabel(
                     g_box,
-                    text=f"{a.get('name', 'GPU')} ({a.get('vram_gb', 0)} GB VRAM)",
+                    text=f"• {a.get('name', 'GPU')} ({a.get('vram_gb', 0)} GB VRAM)",
                     font=ctk.CTkFont(size=12, weight="bold"),
                     text_color="#F8FAFC"
                 )
-                lbl_gname.grid(row=0, column=0, sticky="w", padx=10, pady=(6, 2))
+                lbl_gname.grid(row=idx * 2, column=0, sticky="w", padx=12, pady=(6 if idx == 0 else 4, 1))
 
                 pnp_short = a.get("pnp_device_id", "N/A")
-                if len(pnp_short) > 55:
-                    pnp_short = pnp_short[:52] + "..."
+                if len(pnp_short) > 60:
+                    pnp_short = pnp_short[:57] + "..."
 
                 lbl_gsub = ctk.CTkLabel(
                     g_box,
-                    text=f"Type: {type_badge} | PNP: {pnp_short}",
+                    text=f"   Type: {type_badge} | PNP: {pnp_short}",
                     font=ctk.CTkFont(size=11),
                     text_color=badge_color
                 )
-                lbl_gsub.grid(row=1, column=0, sticky="w", padx=10, pady=(0, 6))
+                lbl_gsub.grid(row=idx * 2 + 1, column=0, sticky="w", padx=12, pady=(0, 6 if idx == len(adapters) - 1 else 2))
         else:
             lbl = ctk.CTkLabel(self.card_gpu.content, text="No display adapters found", text_color="#94A3B8")
             lbl.pack(pady=10)
@@ -631,29 +649,29 @@ class TrueSpecApp(ctk.CTk):
             all_advice.append(("POSITIVE", g, "#10B981"))
 
         if all_advice:
-            for tag, text, col in all_advice:
-                row_f = ctk.CTkFrame(self.card_advice.content, fg_color="#0F172A", corner_radius=6)
-                row_f.pack(fill="x", pady=3)
-                row_f.grid_columnconfigure(1, weight=1)
+            advice_box = ctk.CTkFrame(self.card_advice.content, fg_color="#0F172A", corner_radius=8)
+            advice_box.pack(fill="x", pady=2)
+            advice_box.grid_columnconfigure(1, weight=1)
 
+            for idx, (tag, text, col) in enumerate(all_advice):
                 tag_lbl = ctk.CTkLabel(
-                    row_f,
+                    advice_box,
                     text=f"[{tag}]",
                     font=ctk.CTkFont(size=11, weight="bold"),
                     text_color=col,
                     width=75
                 )
-                tag_lbl.grid(row=0, column=0, padx=(8, 4), pady=6, sticky="nw")
+                tag_lbl.grid(row=idx, column=0, padx=(10, 4), pady=(6 if idx == 0 else 3, 6 if idx == len(all_advice) - 1 else 3), sticky="nw")
 
                 msg_lbl = ctk.CTkLabel(
-                    row_f,
+                    advice_box,
                     text=text,
                     font=ctk.CTkFont(size=12),
                     text_color="#F8FAFC",
                     justify="left",
-                    wraplength=880
+                    anchor="w"
                 )
-                msg_lbl.grid(row=0, column=1, padx=(0, 10), pady=6, sticky="w")
+                msg_lbl.grid(row=idx, column=1, padx=(0, 12), pady=(6 if idx == 0 else 3, 6 if idx == len(all_advice) - 1 else 3), sticky="ew")
         else:
             lbl = ctk.CTkLabel(self.card_advice.content, text="No specific advice generated.", text_color="#94A3B8")
             lbl.pack(pady=10)
@@ -666,7 +684,7 @@ class TrueSpecApp(ctk.CTk):
             font=ctk.CTkFont(size=12, weight="bold"),
             text_color="#94A3B8"
         )
-        k_lbl.grid(row=row_idx, column=0, sticky="w", padx=12, pady=4)
+        k_lbl.grid(row=row_idx, column=0, sticky="w", padx=12, pady=3)
 
         text_font = ctk.CTkFont(family="Consolas", size=11) if is_code else ctk.CTkFont(size=12)
         v_color = "#EF4444" if highlight else color
@@ -677,9 +695,9 @@ class TrueSpecApp(ctk.CTk):
             font=text_font,
             text_color=v_color,
             justify="left",
-            wraplength=650
+            anchor="w"
         )
-        v_lbl.grid(row=row_idx, column=1, sticky="w", padx=12, pady=4)
+        v_lbl.grid(row=row_idx, column=1, sticky="ew", padx=12, pady=3)
 
     def _clear_frame(self, frame):
         """Cleans out existing widgets from a frame before repopulating."""
