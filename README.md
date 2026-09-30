@@ -1,5 +1,9 @@
 # TrueSpec: Second-Hand Laptop Inspector 🔍💻
 
+<p align="center">
+  <img src="logo.jpg" alt="TrueSpec Banner" width="700">
+</p>
+
 [![Build TrueSpec Portable Windows Release](https://github.com/USER/TRUESPEC/actions/workflows/build_release.yml/badge.svg)](https://github.com/USER/TRUESPEC/actions/workflows/build_release.yml)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6.svg?logo=windows)](https://microsoft.com/windows)
 [![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-3776AB.svg?logo=python)](https://python.org)
