@@ -728,7 +728,45 @@ class TrueSpecApp(ctk.CTk):
             messagebox.showinfo("Report Not Ready", "Please re-scan the machine or export the report first.")
 
 
+def _ensure_single_instance():
+    """
+    Ensures only a single instance of TrueSpec runs at any given time.
+    If another instance is launched, activates the existing window and exits.
+    """
+    if sys.platform != "win32":
+        return None
+    try:
+        import ctypes
+        ERROR_ALREADY_EXISTS = 183
+        mutex_name = "Local\\TrueSpec_SecondHand_Inspector_SingleInstance_Mutex"
+        mutex = ctypes.windll.kernel32.CreateMutexW(None, False, mutex_name)
+        if ctypes.windll.kernel32.GetLastError() == ERROR_ALREADY_EXISTS:
+            hwnd = ctypes.windll.user32.FindWindowW(None, "TrueSpec: Second-Hand Laptop Inspector v1.0")
+            if hwnd:
+                ctypes.windll.user32.ShowWindow(hwnd, 9)  # SW_RESTORE
+                ctypes.windll.user32.SetForegroundWindow(hwnd)
+            sys.exit(0)
+        return mutex
+    except Exception:
+        return None
+
+
 def main():
+    import multiprocessing
+    multiprocessing.freeze_support()
+
+    # Prevent cpuinfo from spawning subprocesses on Windows
+    try:
+        import cpuinfo
+        cpuinfo.CAN_CALL_CPUID_IN_SUBPROCESS = False
+        import cpuinfo.cpuinfo as c_internal
+        c_internal.CAN_CALL_CPUID_IN_SUBPROCESS = False
+    except Exception:
+        pass
+
+    # Ensure single instance
+    mutex = _ensure_single_instance()
+
     # Force UTF-8 on Windows console if running with output attached
     if sys.platform == "win32":
         try:
@@ -741,4 +779,6 @@ def main():
 
 
 if __name__ == "__main__":
+    import multiprocessing
+    multiprocessing.freeze_support()
     main()

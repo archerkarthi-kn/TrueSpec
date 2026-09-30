@@ -105,7 +105,15 @@ def get_cpu_audit() -> Dict[str, Any]:
 
     # 2. Read CPUID directly (hardware silicon instruction)
     try:
-        info = cpuinfo.get_cpu_info()
+        # Prevent cpuinfo from spawning multiprocessing/subprocesses on Windows
+        try:
+            import cpuinfo.cpuinfo as c_internal
+            c_internal.CAN_CALL_CPUID_IN_SUBPROCESS = False
+            info = c_internal._get_cpu_info_internal()
+        except Exception:
+            cpuinfo.CAN_CALL_CPUID_IN_SUBPROCESS = False
+            info = cpuinfo.get_cpu_info()
+
         result["cpuid_name"] = _clean_str(info.get("brand_raw", ""))
         result["architecture"] = _clean_str(info.get("arch", ""))
         result["raw_flags"] = info.get("flags", [])
