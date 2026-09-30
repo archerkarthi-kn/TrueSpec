@@ -34,6 +34,7 @@ Laptop_Inspection_Report_*.html
 Laptop_Inspection_Report_*.txt
 temp_battery.xml
 truespec_bat_*.xml
+GITHUB.txt
 
 # IDE / OS
 .vscode/
