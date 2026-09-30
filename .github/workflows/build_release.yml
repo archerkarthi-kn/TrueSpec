@@ -1,0 +1,77 @@
+name: Build TrueSpec Portable Windows Release
+
+on:
+  push:
+    branches: [ "main", "master" ]
+    tags: [ "v*" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Compile Standalone TrueSpec Executable
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Upgrade pip and install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Verify modules and run unit smoke test
+        run: |
+          python -c "import customtkinter, psutil, cpuinfo, wmi; print('All core modules imported successfully')"
+          python src/hardware_audit.py
+          python src/battery_audit.py
+          python src/recommendation_engine.py
+
+      - name: Build Standalone Single-File EXE with PyInstaller
+        run: |
+          pyinstaller --noconfirm --onefile --windowed `
+            --name TrueSpec_Inspector `
+            --collect-all customtkinter `
+            --add-data "src;src" `
+            src/main.py
+
+      - name: Verify Executable Creation
+        run: |
+          if (Test-Path "dist\TrueSpec_Inspector.exe") {
+            Write-Host "Success: dist\TrueSpec_Inspector.exe generated."
+            Get-Item "dist\TrueSpec_Inspector.exe" | Select-Object Name, Length, LastWriteTime
+          } else {
+            Write-Error "dist\TrueSpec_Inspector.exe not found!"
+            exit 1
+          }
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TrueSpec_Inspector_Windows_Portable
+          path: dist/TrueSpec_Inspector.exe
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish GitHub Release (On Tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/TrueSpec_Inspector.exe
+          name: TrueSpec Portable Inspector ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
