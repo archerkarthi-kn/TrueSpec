@@ -10,9 +10,28 @@ Includes browser opening utility.
 
 import os
 import sys
+import base64
 import datetime
 import webbrowser
 from typing import Dict, Any, Tuple
+
+
+def _get_logo_base64() -> str:
+    """Finds and encodes the logo image as base64 for embedding in standalone reports."""
+    candidates = [
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "icon.png"),
+        os.path.join(os.getcwd(), "assets", "icon.png"),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logo.jpg"),
+        os.path.join(os.getcwd(), "logo.jpg")
+    ]
+    for p in candidates:
+        if os.path.exists(p):
+            try:
+                with open(p, "rb") as f:
+                    return base64.b64encode(f.read()).decode("utf-8")
+            except Exception:
+                pass
+    return ""
 
 
 def _sanitize_filename(name: str) -> str:
@@ -169,6 +188,10 @@ def generate_html_report(hardware_data: Dict[str, Any],
     good_items = "".join(f"<li class='good-li'>{g}</li>" for g in good_points)
     suggestion_items = "".join(f"<li class='suggestion-li'>{s}</li>" for s in buyer_suggestions)
 
+    # Base64 logo tag
+    logo_b64 = _get_logo_base64()
+    logo_img_tag = f'<img src="data:image/png;base64,{logo_b64}" width="48" height="48" style="vertical-align: middle; margin-right: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">' if logo_b64 else ''
+
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -196,7 +219,7 @@ def generate_html_report(hardware_data: Dict[str, Any],
         body {{ background-color: var(--bg); color: var(--text-primary); padding: 32px 20px; line-height: 1.5; }}
         .container {{ max-width: 980px; margin: 0 auto; }}
         .header {{ display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 20px; margin-bottom: 24px; }}
-        .logo-title {{ font-size: 26px; font-weight: 800; color: #1E293B; letter-spacing: -0.5px; }}
+        .logo-title {{ font-size: 26px; font-weight: 800; color: #1E293B; letter-spacing: -0.5px; display: flex; align-items: center; }}
         .logo-tag {{ display: inline-block; background: #3B82F6; color: white; font-size: 11px; padding: 3px 8px; border-radius: 9999px; font-weight: 700; margin-left: 8px; vertical-align: middle; }}
         .meta-timestamp {{ font-size: 13px; color: var(--text-secondary); text-align: right; }}
         
@@ -266,7 +289,7 @@ def generate_html_report(hardware_data: Dict[str, Any],
         <!-- Header -->
         <div class="header">
             <div>
-                <div class="logo-title">TrueSpec <span class="logo-tag">HARDWARE AUDIT REPORT</span></div>
+                <div class="logo-title">{logo_img_tag}<span>TrueSpec</span> <span class="logo-tag">HARDWARE AUDIT REPORT</span></div>
                 <div style="font-size: 14px; color: var(--text-secondary); margin-top: 4px;">Second-Hand Laptop Integrity & Verification Telemetry</div>
             </div>
             <div>

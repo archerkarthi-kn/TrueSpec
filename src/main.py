@@ -33,6 +33,18 @@ ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
 
+def get_asset_path(filename: str) -> str:
+    """Resolves asset paths for source development and PyInstaller bundles."""
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        base_path = sys._MEIPASS
+    else:
+        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    path = os.path.join(base_path, "assets", filename)
+    if not os.path.exists(path):
+        path = os.path.join(os.getcwd(), "assets", filename)
+    return path
+
+
 class TrueSpecApp(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -40,6 +52,14 @@ class TrueSpecApp(ctk.CTk):
         self.title("TrueSpec: Second-Hand Laptop Inspector v1.0")
         self.geometry("1140x840")
         self.minsize(980, 700)
+
+        # Set window icon
+        ico_path = get_asset_path("icon.ico")
+        if os.path.exists(ico_path):
+            try:
+                self.iconbitmap(ico_path)
+            except Exception:
+                pass
 
         # Application state
         self.hardware_data = {}
@@ -64,7 +84,6 @@ class TrueSpecApp(ctk.CTk):
                 if self.scroll_frame.winfo_exists():
                     delta = event.delta
                     if delta != 0:
-                        # Smooth, responsive 2-unit scroll per notch (works on both mouse & precision touchpad)
                         units = int(-1 * (delta / 40))
                         if units == 0:
                             units = -1 if delta > 0 else 1
@@ -86,7 +105,19 @@ class TrueSpecApp(ctk.CTk):
 
         # App Title & Badge
         title_box = ctk.CTkFrame(self.header_frame, fg_color="transparent")
-        title_box.grid(row=0, column=0, padx=20, pady=12, sticky="w")
+        title_box.grid(row=0, column=0, padx=20, pady=10, sticky="w")
+
+        # Load Logo Thumbnail for Header
+        icon_path = get_asset_path("icon.png")
+        if os.path.exists(icon_path):
+            try:
+                from PIL import Image
+                pil_icon = Image.open(icon_path)
+                self.header_logo_img = ctk.CTkImage(light_image=pil_icon, dark_image=pil_icon, size=(44, 44))
+                logo_lbl = ctk.CTkLabel(title_box, image=self.header_logo_img, text="")
+                logo_lbl.pack(side="left", padx=(0, 12))
+            except Exception as e:
+                pass
 
         title_label = ctk.CTkLabel(
             title_box,

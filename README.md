@@ -97,8 +97,10 @@ To build your own portable `.exe` using PyInstaller:
 # Compile with PyInstaller
 pyinstaller --noconfirm --onefile --windowed `
   --name TrueSpec_Inspector `
+  --icon assets/icon.ico `
   --collect-all customtkinter `
   --add-data "src;src" `
+  --add-data "assets;assets" `
   src/main.py
 ```
 
