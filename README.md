@@ -4,7 +4,7 @@
   <img src="logo.jpg" alt="TrueSpec Banner" width="700">
 </p>
 
-[![Build TrueSpec Portable Windows Release](https://github.com/USER/TRUESPEC/actions/workflows/build_release.yml/badge.svg)](https://github.com/USER/TRUESPEC/actions/workflows/build_release.yml)
+[![Build TrueSpec Portable Windows Release](https://github.com/archerkarthi-kn/TrueSpec/actions/workflows/build_release.yml/badge.svg)](https://github.com/archerkarthi-kn/TrueSpec/actions/workflows/build_release.yml)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6.svg?logo=windows)](https://microsoft.com/windows)
 [![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-3776AB.svg?logo=python)](https://python.org)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -49,7 +49,7 @@ Used laptop markets are filled with deceptive tricks: dishonest sellers frequent
 
 ## 🚀 Quick Start (Running from USB)
 
-1. Download the pre-compiled `TrueSpec_Inspector.exe` from the [GitHub Releases](https://github.com/USER/TRUESPEC/releases) tab.
+1. Download the pre-compiled `TrueSpec_Inspector.exe` from the [GitHub Releases](https://github.com/archerkarthi-kn/TrueSpec/releases) tab.
 2. Copy `TrueSpec_Inspector.exe` to your USB flash drive.
 3. Plug the USB drive into the laptop you are inspecting.
 4. Double-click `TrueSpec_Inspector.exe`:
@@ -70,8 +70,8 @@ Used laptop markets are filled with deceptive tricks: dishonest sellers frequent
 
 ```powershell
 # 1. Clone repository
-git clone https://github.com/USER/TRUESPEC.git
-cd TRUESPEC
+git clone https://github.com/archerkarthi-kn/TrueSpec.git
+cd TrueSpec
 
 # 2. Create virtual environment
 python -m venv venv
